@@ -1,6 +1,6 @@
 {
   "name": "WiSim AI",
-  "description": "WiSim AI | From Idea to Deployment - AI-powered ML research, feasibility analysis, dataset experiments, and deployment optimization platform powered by Groq API.",
+  "description": "WiSim AI is an intelligent research and experimentation platform for evaluating AI project feasibility, analyzing datasets, comparing machine-learning models, simulating training requirements and planning deployment.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

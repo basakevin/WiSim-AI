@@ -3,25 +3,26 @@ import {
   Terminal, 
   Sparkles, 
   Play, 
-  RotateCcw, 
   Activity, 
   CheckCircle2, 
-  AlertCircle, 
   Zap, 
-  Clock, 
   Brain, 
   Layers, 
   Sliders,
   TrendingDown,
+  TrendingUp,
   RefreshCw,
   GitCompare,
-  HelpCircle,
   Copy,
-  Check
+  Check,
+  Network,
+  Binary,
+  Crosshair,
+  Info
 } from 'lucide-react';
 import { Dataset, ExperimentRun } from '../types';
 import { executeExperiment, TrainingConfig } from '../utils/mlEngine';
-import { interpretExperimentWithGroq } from '../services/groqService';
+import { interpretExperimentWithWiSim } from '../services/wisimService';
 
 interface ExperimentPlaygroundViewProps {
   dataset: Dataset;
@@ -53,7 +54,6 @@ export const ExperimentPlaygroundView: React.FC<ExperimentPlaygroundViewProps> =
   );
   const [copied, setCopied] = useState(false);
 
-  // Sync interpretation when active experiment changes
   React.useEffect(() => {
     if (activeExperiment) {
       setInterpretationText(activeExperiment.groqInterpretation || null);
@@ -65,7 +65,6 @@ export const ExperimentPlaygroundView: React.FC<ExperimentPlaygroundViewProps> =
     setInterpretationText(null);
 
     try {
-      // Simulate real training loop yield so UI animates
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       const newRun = await executeExperiment(dataset, {
@@ -88,12 +87,12 @@ export const ExperimentPlaygroundView: React.FC<ExperimentPlaygroundViewProps> =
     }
   };
 
-  const handleInterpretWithGroq = async () => {
+  const handleInterpretWithWiSim = async () => {
     if (!activeExperiment) return;
     setInterpreting(true);
 
     try {
-      const res = await interpretExperimentWithGroq(activeExperiment);
+      const res = await interpretExperimentWithWiSim(activeExperiment);
       setInterpretationText(res.analysis);
       activeExperiment.groqInterpretation = res.analysis;
     } catch (err: any) {
@@ -105,9 +104,11 @@ export const ExperimentPlaygroundView: React.FC<ExperimentPlaygroundViewProps> =
 
   const handleCopyCode = () => {
     if (!activeExperiment) return;
-    const pyCode = `# WiSim AI Exported PyTorch / Scikit-Learn Model Configuration
+    const pyCode = `# =======================================================
+# WiSim AI Exported Architecture
 # Dataset: ${activeExperiment.datasetName}
 # Algorithm: ${activeExperiment.algorithm}
+# =======================================================
 
 import torch
 import torch.nn as nn
@@ -148,11 +149,11 @@ criterion = nn.BCELoss()
           <div className="flex items-center space-x-2">
             <Terminal className="h-5 w-5 text-cyan-400" />
             <h2 className="text-lg font-bold text-white">
-              Real Machine Learning Experiment Playground
+              WiSim Lab • Empirical Experiment Bench
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Executes mathematical model training on real features. Groq provides empirical diagnosis on genuine numbers.
+            Genuine mathematical model fitting on held-out test partitions. All evaluation metrics are measured directly from execution.
           </p>
         </div>
 
@@ -170,14 +171,14 @@ criterion = nn.BCELoss()
             ) : (
               <>
                 <Play className="h-4 w-4 fill-current" />
-                <span>Run Empirical Training</span>
+                <span>Execute Real Training</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Main Workbench: Config Column (Left) vs Results & Groq Interpretation (Right) */}
+      {/* Main Workbench: Config Column (Left) vs Results & WiSim Diagnosis (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Algorithm & Hyperparameters */}
         <div className="space-y-4">
@@ -195,44 +196,55 @@ criterion = nn.BCELoss()
                   name: 'Multilayer Perceptron (MLP)',
                   desc: 'Deep feedforward neural net with ReLU activations & backpropagation gradient descent.',
                   tag: 'Neural Net',
+                  icon: Network,
                 },
                 {
                   id: 'logistic_regression',
-                  name: 'Regularized Logistic Regression',
+                  name: 'Regularized Logistic Classifier',
                   desc: 'Linear model with Sigmoid link function, L2 penalty & Cross-Entropy optimization.',
                   tag: 'Linear',
+                  icon: TrendingUp,
                 },
                 {
                   id: 'random_forest',
                   name: 'Random Forest Ensemble',
                   desc: 'Bagged decision trees with recursive Gini impurity splitting.',
                   tag: 'Ensemble',
+                  icon: Binary,
                 },
                 {
                   id: 'knn',
                   name: 'k-Nearest Neighbors (KNN)',
                   desc: 'Non-parametric lazy learner with pairwise Euclidean distance metric.',
                   tag: 'Instance',
+                  icon: Crosshair,
                 },
-              ].map((m) => (
-                <div
-                  key={m.id}
-                  onClick={() => setAlgorithm(m.id as any)}
-                  className={`rounded-xl border p-3 cursor-pointer transition-all ${
-                    algorithm === m.id
-                      ? 'border-cyan-500/80 bg-cyan-950/40 text-cyan-200 shadow-md shadow-cyan-950/40'
-                      : 'border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">{m.name}</span>
-                    <span className="rounded bg-slate-800/80 px-1.5 py-0.5 text-[9px] font-mono text-cyan-400">
-                      {m.tag}
-                    </span>
+              ].map((m) => {
+                const Icon = m.icon;
+                const isSelected = algorithm === m.id;
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => setAlgorithm(m.id as any)}
+                    className={`rounded-xl border p-3 cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-cyan-500/80 bg-cyan-950/40 text-cyan-200 shadow-md shadow-cyan-950/40'
+                        : 'border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Icon className={`h-4 w-4 ${isSelected ? 'text-cyan-400' : 'text-slate-400'}`} />
+                        <span className="text-xs font-bold text-white">{m.name}</span>
+                      </div>
+                      <span className="rounded bg-slate-800/80 px-1.5 py-0.5 text-[9px] font-mono text-cyan-400">
+                        {m.tag}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-400 leading-normal pl-6">{m.desc}</p>
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-400 leading-normal">{m.desc}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Hyperparameter Controls */}
@@ -362,7 +374,7 @@ criterion = nn.BCELoss()
           </div>
         </div>
 
-        {/* Right 2 Columns: Measured Metrics, Real Charts, & Groq Diagnosis */}
+        {/* Right 2 Columns: Measured Metrics, Real Charts, & WiSim Diagnosis */}
         <div className="lg:col-span-2 space-y-6">
           {activeExperiment && currentMetrics ? (
             <>
@@ -394,7 +406,7 @@ criterion = nn.BCELoss()
                     {currentMetrics.trainingTimeMs}
                     <span className="text-xs font-normal text-slate-400 ml-1">ms</span>
                   </div>
-                  <span className="text-[10px] text-slate-500">measured fit</span>
+                  <span className="text-[10px] text-slate-500">empirical run</span>
                 </div>
 
                 <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5">
@@ -414,7 +426,7 @@ criterion = nn.BCELoss()
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-white flex items-center">
                       <TrendingDown className="mr-1.5 h-4 w-4 text-cyan-400" />
-                      Empirical Loss Trajectory
+                      Empirical Loss Curve
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">
                       Loss: {currentMetrics.lossHistory[currentMetrics.lossHistory.length - 1]}
@@ -423,12 +435,10 @@ criterion = nn.BCELoss()
 
                   <div className="h-36 w-full rounded-lg bg-slate-950/70 p-2 flex flex-col justify-end">
                     <svg viewBox="0 0 300 100" className="w-full h-full overflow-visible">
-                      {/* Grid lines */}
                       <line x1="0" y1="25" x2="300" y2="25" stroke="#1e293b" strokeDasharray="3 3" />
                       <line x1="0" y1="50" x2="300" y2="50" stroke="#1e293b" strokeDasharray="3 3" />
                       <line x1="0" y1="75" x2="300" y2="75" stroke="#1e293b" strokeDasharray="3 3" />
 
-                      {/* Loss line */}
                       {(() => {
                         const history = currentMetrics.lossHistory;
                         if (!history || history.length < 2) return null;
@@ -453,7 +463,6 @@ criterion = nn.BCELoss()
                               strokeLinecap="round"
                               points={points}
                             />
-                            {/* Start / End points */}
                             <circle cx="0" cy={90 - ((history[0] - minL) / range) * 80} r="3" fill="#06b6d4" />
                             <circle cx="300" cy={90 - ((history[history.length - 1] - minL) / range) * 80} r="3" fill="#22d3ee" />
                           </>
@@ -463,7 +472,7 @@ criterion = nn.BCELoss()
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-500 font-mono">
                     <span>Epoch 1 (Loss: {currentMetrics.lossHistory[0]?.toFixed(3)})</span>
-                    <span className="text-cyan-400">Convergence Slope</span>
+                    <span className="text-cyan-400">Measured Trajectory</span>
                     <span>Final Epoch</span>
                   </div>
                 </div>
@@ -475,7 +484,7 @@ criterion = nn.BCELoss()
                       <Layers className="mr-1.5 h-4 w-4 text-indigo-400" />
                       Empirical Confusion Matrix
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Test Partition</span>
+                    <span className="text-[10px] text-slate-400 font-mono">Held-out Partition</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-center pt-1 font-mono">
@@ -505,19 +514,19 @@ criterion = nn.BCELoss()
                     </div>
                   </div>
                   <p className="text-[10px] text-slate-500 text-center">
-                    Held-out test samples evaluated independently
+                    Ground-truth partition evaluation
                   </p>
                 </div>
               </div>
 
-              {/* Groq AI Empirical Interpreter Section */}
+              {/* WiSim Intelligence Empirical Interpreter Section */}
               <div className="rounded-2xl border border-indigo-900/60 bg-gradient-to-b from-indigo-950/30 to-slate-900/40 p-5 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <div className="flex items-center space-x-2">
                       <Sparkles className="h-4 w-4 text-cyan-400" />
                       <h3 className="text-sm font-bold text-white">
-                        Groq AI Empirical Experiment Interpreter
+                        WiSim Intelligence • Empirical Experiment Diagnosis
                       </h3>
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">
@@ -538,24 +547,24 @@ criterion = nn.BCELoss()
                       ) : (
                         <>
                           <Copy className="h-3.5 w-3.5" />
-                          <span>Export PyTorch</span>
+                          <span>Export Architecture</span>
                         </>
                       )}
                     </button>
                     <button
-                      onClick={handleInterpretWithGroq}
+                      onClick={handleInterpretWithWiSim}
                       disabled={interpreting}
                       className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md shadow-cyan-500/25 hover:from-cyan-400 hover:to-indigo-500 cursor-pointer disabled:opacity-50"
                     >
                       {interpreting ? (
                         <>
                           <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                          <span>Analyzing with Groq...</span>
+                          <span>Synthesizing Diagnosis...</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="h-3.5 w-3.5" />
-                          <span>Interpret with Groq Llama 3.3</span>
+                          <span>Interpret with WiSim Intelligence</span>
                         </>
                       )}
                     </button>
@@ -569,7 +578,7 @@ criterion = nn.BCELoss()
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-slate-800 p-6 text-center text-xs text-slate-500">
-                    Click &ldquo;Interpret with Groq Llama 3.3&rdquo; to analyze the train/test discrepancy, diagnose overfitting or underfitting, evaluate error profiles, and receive concrete scientific recommendations.
+                    Click &ldquo;Interpret with WiSim Intelligence&rdquo; to analyze the train/test gap, diagnose bias/variance trade-offs, and receive concrete scientific optimization next steps.
                   </div>
                 )}
               </div>
@@ -577,9 +586,9 @@ criterion = nn.BCELoss()
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-800 p-12 text-center">
               <Terminal className="mx-auto h-12 w-12 text-slate-600 mb-3" />
-              <h3 className="text-base font-semibold text-white">Ready to Train</h3>
+              <h3 className="text-base font-semibold text-white">Ready for Empirical Run</h3>
               <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                Configure hyperparameters on the left and click &ldquo;Run Empirical Training&rdquo; to fit real weights and measure genuine convergence.
+                Configure hyperparameters on the left and click &ldquo;Execute Real Training&rdquo; to fit parameters and measure empirical convergence.
               </p>
               <button
                 onClick={handleRunTraining}
@@ -597,7 +606,7 @@ criterion = nn.BCELoss()
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center">
                   <GitCompare className="mr-1.5 h-3.5 w-3.5 text-cyan-400" />
-                  Experiment Run Comparison Board
+                  WiSim Lab Leaderboard & Comparison Board
                 </h4>
                 <span className="text-[11px] text-slate-500 font-mono">
                   {experiments.length} Runs Recorded

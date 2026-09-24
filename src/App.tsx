@@ -7,20 +7,20 @@ import { DatasetLabView } from './components/DatasetLabView';
 import { ExperimentPlaygroundView } from './components/ExperimentPlaygroundView';
 import { BudgetOptimizerView } from './components/BudgetOptimizerView';
 import { DeploymentStudioView } from './components/DeploymentStudioView';
-import { GroqConfigModal } from './components/GroqConfigModal';
+import { EngineStatusModal } from './components/EngineStatusModal';
 import { BENCHMARK_DATASETS } from './utils/datasets';
-import { ProjectContext, ExperimentRun, FeasibilityReport, GroqStatus } from './types';
-import { fetchGroqStatus } from './services/groqService';
+import { ProjectContext, ExperimentRun, FeasibilityReport } from './types';
+import { WiSimEngineStatus, fetchWiSimEngineStatus } from './services/wisimService';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState<boolean>(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState<boolean>(false);
 
-  // Active Project Context
+  // Active Project Memory Context
   const [currentProject, setCurrentProject] = useState<ProjectContext>({
     id: 'proj-churn-sentinel',
-    name: 'Enterprise Customer Churn & Default Sentinel',
-    description: 'Predictive subscription attrition and credit default risk modeling with 8 heterogeneous features to trigger proactive customer retention workflows.',
+    name: 'Enterprise Customer Churn Sentinel',
+    description: 'Predictive subscription attrition and default risk modeling using 8 heterogeneous features to trigger automated retention intervention workflows.',
     taskType: 'binary-classification',
     primaryMetric: 'Macro F1-Score & PR-AUC',
     targetLatencyMs: 15,
@@ -35,16 +35,11 @@ export default function App() {
   const [trainRatio, setTrainRatio] = useState(0.25);
   const [normalize, setNormalize] = useState(true);
 
-  // Groq API Status
-  const [groqStatus, setGroqStatus] = useState<GroqStatus>({
-    configured: false,
-    model: 'llama-3.3-70b-versatile',
-    availableModels: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],
-    provider: 'Groq Cloud',
-  });
-  const [selectedModel, setSelectedModel] = useState('llama-3.3-70b-versatile');
+  // WiSim Engine Status
+  const [engineStatus, setEngineStatus] = useState<WiSimEngineStatus | null>(null);
+  const [activeModel, setActiveModel] = useState('llama-3.1-8b-instant');
 
-  // Pre-seed with realistic empirical baseline runs
+  // Baseline Empirical Runs in WiSim Lab
   const [experiments, setExperiments] = useState<ExperimentRun[]>([
     {
       id: 'exp-baseline-rf',
@@ -70,20 +65,20 @@ export default function App() {
         trainingTimeMs: 42,
         inferenceLatencyMs: 0.12,
       },
-      groqInterpretation: `### WiSim AI Empirical Experiment Assessment
-*Grounded on measured run data for Random Forest on Enterprise Customer Churn*
+      groqInterpretation: `### WiSim Lab Empirical Assessment
+*Diagnostic evaluation for Random Forest on Enterprise Customer Churn*
 
-#### 1. Convergence & Generalization Diagnosis
+#### 1. Generalization & Convergence Profile
 - **Status:** **Balanced Generalization (Low Variance)**
-- **Train vs Test Discrepancy:** The training accuracy achieved **88.4%** while held-out test accuracy stabilized at **85.7%** (a tight 2.7% generalization gap).
-- **Loss Trajectory:** Ensembling over bootstrap trees effectively suppressed individual tree variance without memorizing spurious noise.
+- **Empirical Validation:** Training accuracy achieved **88.4%** while held-out test accuracy stabilized at **85.7%** (a tight 2.7% generalization gap).
+- **Loss Optimization:** Ensembling over bootstrap trees effectively suppressed individual tree variance without memorizing spurious noise.
 
 #### 2. Confusion Matrix & Error Profile
 - **F1 Score:** **84.2%** (Precision: 83.1%, Recall: 85.4%).
 - The model correctly captured 26 out of 32 true churners with only 10 false alarms out of 81 retained customers.
 
 #### 3. Serving & Latency Assessment
-- **Training Duration:** **42 ms** (instant CPU convergence).
+- **Training Duration:** **42 ms** (instant empirical convergence).
 - **Per-Sample Latency:** **0.12 ms**, which is 125x faster than your 15ms SLA target. Ideal for synchronous inline API scoring.`,
       status: 'completed',
     },
@@ -117,11 +112,11 @@ export default function App() {
 
   const [activeExperiment, setActiveExperiment] = useState<ExperimentRun | null>(experiments[0]);
 
-  // Pre-seed structured feasibility report
+  // Pre-seed WiSim Intelligence Structured Feasibility Report
   const [feasibilityReport, setFeasibilityReport] = useState<FeasibilityReport | null>({
     feasibilityScore: 88,
     verdict: 'RECOMMENDED',
-    summary: 'The Enterprise Customer Churn & Default Sentinel demonstrates strong algorithmic feasibility. Feature distributions offer high separability via decision trees and regularized multi-layer perceptrons while comfortably meeting sub-15ms latency requirements.',
+    summary: 'The Enterprise Customer Churn Sentinel exhibits strong algorithmic feasibility. Feature distributions offer high separability via decision trees and regularized multi-layer perceptrons while comfortably meeting sub-15ms latency requirements.',
     problemFraming: {
       taskCategory: 'Supervised Binary Classification',
       primaryMetric: 'Macro F1-Score & PR-AUC',
@@ -210,12 +205,11 @@ export default function App() {
     ],
   });
 
-  // Fetch Groq status on mount
   useEffect(() => {
-    fetchGroqStatus().then((status) => {
-      setGroqStatus(status);
-      if (status.model) {
-        setSelectedModel(status.model);
+    fetchWiSimEngineStatus().then((status) => {
+      setEngineStatus(status);
+      if (status.inference.activeModel) {
+        setActiveModel(status.inference.activeModel);
       }
     });
   }, []);
@@ -227,16 +221,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Header & Navigation */}
+      {/* Header & Subsystem Navigation */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        groqStatus={groqStatus}
+        engineStatus={engineStatus}
         currentProject={currentProject}
-        onOpenSettings={() => setIsConfigModalOpen(true)}
+        onOpenSettings={() => setIsStatusModalOpen(true)}
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Workspace */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         {activeTab === 'dashboard' && (
           <DashboardView
@@ -252,9 +246,10 @@ export default function App() {
           <CopilotView
             currentProject={currentProject}
             experiments={experiments}
-            groqModel={selectedModel}
-            onModelChange={(model) => setSelectedModel(model)}
-            availableModels={groqStatus.availableModels}
+            activeModel={activeModel}
+            onModelChange={(model) => setActiveModel(model)}
+            availableModels={engineStatus?.inference.availableModels || ['llama-3.1-8b-instant', 'llama3-8b-8192', 'llama3-70b-8192', 'gemma2-9b-it']}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
           />
         )}
 
@@ -301,12 +296,12 @@ export default function App() {
         )}
       </main>
 
-      {/* Groq Configuration & Security Modal */}
-      <GroqConfigModal
-        isOpen={isConfigModalOpen}
-        onClose={() => setIsConfigModalOpen(false)}
-        status={groqStatus}
-        onStatusUpdated={(newStatus) => setGroqStatus(newStatus)}
+      {/* WiSim AI Architecture & System Configuration Diagnostics */}
+      <EngineStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        status={engineStatus}
+        onStatusUpdated={(newStatus) => setEngineStatus(newStatus)}
       />
     </div>
   );

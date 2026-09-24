@@ -4,50 +4,45 @@ import {
   Sparkles, 
   Bot, 
   User, 
-  Terminal, 
   Copy, 
   Check, 
   RotateCcw, 
-  Code2, 
   AlertCircle,
   HelpCircle,
   Zap,
-  Info
+  Info,
+  Layers,
+  ArrowRight,
+  Workflow,
+  Cpu,
+  Database
 } from 'lucide-react';
 import { ChatMessage, ProjectContext, ExperimentRun } from '../types';
-import { streamChatWithGroq } from '../services/groqService';
+import { streamChatWithCopilot } from '../services/wisimService';
 
 interface CopilotViewProps {
   currentProject: ProjectContext;
   experiments: ExperimentRun[];
-  groqModel: string;
+  activeModel: string;
   onModelChange: (model: string) => void;
   availableModels: string[];
+  onNavigateToTab?: (tab: string) => void;
 }
 
 export const CopilotView: React.FC<CopilotViewProps> = ({
   currentProject,
   experiments,
-  groqModel,
+  activeModel,
   onModelChange,
   availableModels,
+  onNavigateToTab,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: 'welcome',
+      id: 'welcome-wisim',
       role: 'assistant',
-      content: `### Welcome to WiSim AI Research Copilot 🚀
-Powered by the ultra-fast **Groq LPU Inference Engine** (\`${groqModel}\`).
-
-I can assist you with:
-- **Algorithmic Selection & Trade-Offs**: Evaluating tree ensembles vs deep neural nets for tabular or unstructured data.
-- **Scientific Feasibility**: Identifying missing training data, class imbalance mitigation, and risk factors.
-- **Empirical Diagnostics**: Explaining real confusion matrices, learning rate schedules, and overfitting.
-- **Production Code Generation**: PyTorch training loops, ONNX quantization scripts, and FastAPI endpoints.
-
-*What would you like to explore for project "${currentProject.name}"?*`,
+      content: `Hello! I'm WiSim AI, your AI research and simulation copilot. Describe your project idea, and I'll help you evaluate its feasibility, select appropriate models, estimate resources and plan deployment.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      model: groqModel,
     },
   ]);
 
@@ -92,7 +87,6 @@ I can assist you with:
       role: 'assistant',
       content: '',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      model: groqModel,
       isStreaming: true,
     };
 
@@ -100,12 +94,12 @@ I can assist you with:
     setMessages([...updatedMessages, initialAssistantMsg]);
     setIsStreaming(true);
 
-    // Build context object
     const projectContextData = {
       projectName: currentProject.name,
       taskType: currentProject.taskType,
       primaryMetric: currentProject.primaryMetric,
       targetLatencyMs: currentProject.targetLatencyMs,
+      budgetMonthlyUsd: currentProject.budgetMonthlyUsd,
       recentExperimentSummary: experiments.slice(0, 3).map((e) => ({
         algorithm: e.algorithm,
         testAccuracy: e.metrics.testAccuracy,
@@ -114,16 +108,15 @@ I can assist you with:
       })),
     };
 
-    // Prepare message history for backend
     const apiMessages = updatedMessages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
 
     try {
-      await streamChatWithGroq(
+      await streamChatWithCopilot(
         apiMessages,
-        groqModel,
+        activeModel,
         projectContextData,
         (chunk) => {
           setMessages((prev) =>
@@ -139,7 +132,7 @@ I can assist you with:
         }
       );
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error communicating with Groq API');
+      setErrorMessage(err.message || 'Error processing request in WiSim AI Copilot');
     } finally {
       setIsStreaming(false);
       setMessages((prev) =>
@@ -162,62 +155,65 @@ I can assist you with:
       {
         id: `welcome-${Date.now()}`,
         role: 'assistant',
-        content: `Conversation reset. WiSim AI Research Copilot ready for "${currentProject.name}".`,
+        content: `Hello! I'm WiSim AI, your AI research and simulation copilot. Describe your project idea, and I'll help you evaluate its feasibility, select appropriate models, estimate resources and plan deployment.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        model: groqModel,
       },
     ]);
   };
 
-  // Quick prompt suggestions
-  const starterPrompts = [
+  // Structured guided workflow triggers
+  const workflowActions = [
     {
-      title: 'Compare Algorithms',
-      prompt: 'Compare Gradient Boosted Trees (XGBoost) vs a 3-layer Multilayer Perceptron for customer churn. Detail training complexity and inference latency trade-offs.',
+      label: 'Evaluate Feasibility',
+      prompt: `Please evaluate the algorithmic feasibility and technical risks for ${currentProject.name}. Suggest suitable loss functions, sample sizes, and baseline models.`,
+      icon: Workflow,
     },
     {
-      title: 'Loss for Class Imbalance',
-      prompt: 'Our dataset has an 82/18 class imbalance ratio. Should I use Focal Loss, Weighted Cross-Entropy, or threshold-tuning? Detail the mathematical trade-off.',
+      label: 'Compare Algorithms',
+      prompt: `Compare the trade-offs between Gradient Boosted Decision Trees and Multilayer Perceptrons for our ${currentProject.taskType} task. Focus on training complexity and inference latency.`,
+      icon: Layers,
     },
     {
-      title: 'PyTorch Training Loop',
-      prompt: 'Generate a clean, production-grade PyTorch training loop with mixed precision (torch.cuda.amp), gradient clipping, and CosineAnnealingLR.',
+      label: 'Estimate GPU & Costs',
+      prompt: `Estimate training compute hours, required GPU VRAM, and monthly serving costs for ${currentProject.name} to stay under our $${currentProject.budgetMonthlyUsd}/month budget.`,
+      icon: Cpu,
     },
     {
-      title: 'ONNX Quantization',
-      prompt: 'How do I export a PyTorch model to ONNX and perform INT8 static calibration for sub-10ms CPU inference?',
+      label: 'Export PyTorch Pipeline',
+      prompt: `Generate a production-grade PyTorch training loop with cosine learning rate scheduling, mixed precision, and ONNX export for ${currentProject.name}.`,
+      icon: Zap,
     },
   ];
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-xl">
-      {/* Top Header / Model Selector Bar */}
+      {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between border-b border-slate-800 bg-slate-950/70 px-4 py-3 sm:px-6">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-950/80 border border-cyan-800/40 text-cyan-400">
-            <Sparkles className="h-4 w-4" />
+            <Bot className="h-4 w-4" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <span className="text-xs font-bold text-white uppercase tracking-wider">
-                Groq AI Research Copilot
+                WiSim AI Copilot
               </span>
-              <span className="rounded bg-emerald-950/60 px-1.5 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-800/40">
-                Streaming Active
+              <span className="rounded bg-cyan-950/60 px-1.5 py-0.5 text-[10px] font-mono text-cyan-400 border border-cyan-800/40">
+                Project Memory Active
               </span>
             </div>
             <p className="text-[11px] text-slate-400">
-              Project Context: <span className="text-slate-200 font-medium">{currentProject.name}</span>
+              Context: <span className="text-slate-200 font-medium">{currentProject.name}</span>
             </p>
           </div>
         </div>
 
-        {/* Model selection & clear */}
+        {/* Controls */}
         <div className="flex items-center space-x-3 mt-2 sm:mt-0">
           <div className="flex items-center space-x-1.5 rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs text-slate-300">
             <span className="text-slate-500 text-[11px]">Model:</span>
             <select
-              value={groqModel}
+              value={activeModel}
               onChange={(e) => onModelChange(e.target.value)}
               className="bg-transparent font-mono text-xs text-cyan-400 focus:outline-none cursor-pointer"
             >
@@ -231,7 +227,7 @@ I can assist you with:
 
           <button
             onClick={handleClearHistory}
-            className="flex items-center space-x-1 rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs text-slate-400 hover:text-white hover:border-slate-700 transition-colors"
+            className="flex items-center space-x-1 rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
             title="Reset Conversation"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -261,9 +257,9 @@ I can assist you with:
               </div>
 
               {/* Message Bubble */}
-              <div className={`group relative max-w-2xl sm:max-w-3xl space-y-1`}>
+              <div className="group relative max-w-2xl sm:max-w-3xl space-y-1">
                 <div className={`flex items-center space-x-2 text-[11px] text-slate-500 ${isUser ? 'justify-end' : 'justify-start'}`}>
-                  <span>{isUser ? 'You' : `WiSim AI (${msg.model || groqModel})`}</span>
+                  <span>{isUser ? 'You' : 'WiSim AI'}</span>
                   <span>•</span>
                   <span>{msg.timestamp}</span>
                 </div>
@@ -275,7 +271,6 @@ I can assist you with:
                       : 'border border-slate-800/90 bg-slate-950/80 text-slate-200 shadow-md shadow-slate-950/50 rounded-tl-none'
                   }`}
                 >
-                  {/* Markdown formatted content */}
                   <div className="prose prose-invert prose-xs sm:prose-sm max-w-none whitespace-pre-wrap font-sans">
                     {msg.content}
                     {msg.isStreaming && (
@@ -299,7 +294,7 @@ I can assist you with:
                       ) : (
                         <>
                           <Copy className="h-3 w-3" />
-                          <span>Copy Response</span>
+                          <span>Copy</span>
                         </>
                       )}
                     </button>
@@ -320,27 +315,40 @@ I can assist you with:
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Starter Prompts pills (visible when only 1-2 messages) */}
-      {messages.length <= 2 && (
-        <div className="border-t border-slate-800/70 bg-slate-950/40 px-4 py-2 sm:px-6">
-          <div className="flex items-center space-x-1 text-[11px] text-slate-400 mb-1.5">
-            <HelpCircle className="h-3 w-3 text-cyan-400" />
-            <span>Suggested Research Questions:</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {starterPrompts.map((p, idx) => (
+      {/* Guided Workflow Pills */}
+      <div className="border-t border-slate-800/70 bg-slate-950/40 px-4 py-2 sm:px-6">
+        <div className="flex items-center justify-between mb-1.5 text-[11px] text-slate-400">
+          <span className="flex items-center space-x-1 font-medium">
+            <Sparkles className="h-3 w-3 text-cyan-400" />
+            <span>Guided AI Research Actions:</span>
+          </span>
+          {onNavigateToTab && (
+            <button
+              onClick={() => onNavigateToTab('feasibility')}
+              className="text-cyan-400 hover:text-cyan-300 flex items-center cursor-pointer"
+            >
+              <span>Open WiSim Intelligence</span>
+              <ArrowRight className="h-3 w-3 ml-0.5" />
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {workflowActions.map((action, idx) => {
+            const Icon = action.icon;
+            return (
               <button
                 key={idx}
-                onClick={() => handleSend(p.prompt)}
+                onClick={() => handleSend(action.prompt)}
                 disabled={isStreaming}
-                className="rounded-lg border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-xs text-slate-300 hover:border-cyan-700/60 hover:text-cyan-300 hover:bg-slate-800/80 transition-all text-left cursor-pointer"
+                className="flex items-center space-x-1.5 rounded-lg border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-xs text-slate-300 hover:border-cyan-700/60 hover:text-cyan-300 hover:bg-slate-800/80 transition-all cursor-pointer"
               >
-                {p.title}
+                <Icon className="h-3 w-3 text-cyan-400" />
+                <span>{action.label}</span>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      )}
+      </div>
 
       {/* Input Form Bar */}
       <div className="border-t border-slate-800 bg-slate-950/80 p-3 sm:p-4">
@@ -384,7 +392,7 @@ I can assist you with:
         <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 px-1">
           <span className="flex items-center space-x-1">
             <Info className="h-3 w-3" />
-            <span>Groq LPU ultra-low latency • Context-aware per project</span>
+            <span>WiSim Intelligence Orchestration • Context-Aware Research Memory</span>
           </span>
           <span>Shift + Enter for newline</span>
         </div>

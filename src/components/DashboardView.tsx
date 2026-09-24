@@ -1,18 +1,21 @@
 import React from 'react';
 import { 
-  Sparkles, 
   Terminal, 
-  Layers, 
+  Workflow, 
   CheckCircle, 
   Clock, 
   ArrowUpRight, 
   Zap, 
-  Shield, 
+  ShieldCheck, 
   Server, 
   Cpu, 
   TrendingUp, 
   FileCode,
-  Activity
+  Activity,
+  Bot,
+  Database,
+  Coins,
+  Rocket
 } from 'lucide-react';
 import { ProjectContext, ExperimentRun, FeasibilityReport } from '../types';
 
@@ -44,9 +47,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center space-x-2">
               <span className="inline-flex items-center rounded-md bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-400 border border-cyan-500/20">
-                <Sparkles className="mr-1 h-3 w-3" /> Groq AI Accelerated
+                <Workflow className="mr-1.5 h-3.5 w-3.5" /> WiSim Intelligence
               </span>
-              <span className="text-xs text-slate-400">Pipeline Stage: Validating Model Convergence</span>
+              <span className="text-xs text-slate-400">Research Pipeline Active</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
               {currentProject.name}
@@ -61,37 +64,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               onClick={() => onNavigate('copilot')}
               className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-cyan-500/25 hover:from-cyan-400 hover:to-indigo-500 transition-all cursor-pointer"
             >
-              <Sparkles className="h-4 w-4" />
-              <span>Ask Groq Copilot</span>
+              <Bot className="h-4 w-4" />
+              <span>Launch WiSim Copilot</span>
             </button>
             <button
               onClick={() => onNavigate('experiments')}
               className="flex items-center space-x-2 rounded-xl border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
             >
               <Terminal className="h-4 w-4 text-cyan-400" />
-              <span>Train Real Model</span>
+              <span>WiSim Lab Experiments</span>
             </button>
           </div>
         </div>
 
-        {/* Pipeline Stage Tracker */}
+        {/* Modular Pipeline Stages */}
         <div className="mt-8 border-t border-slate-800/80 pt-6">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { stage: '1. Problem Framing', status: 'completed', desc: 'Requirements & Loss Formulation' },
-              { stage: '2. Dataset Profiling', status: 'completed', desc: 'Schema & Feature Variance' },
-              { stage: '3. Empirical ML Lab', status: experiments.length > 0 ? 'completed' : 'active', desc: `${experiments.length} Runs Executed` },
-              { stage: '4. Feasibility Audit', status: feasibilityReport ? 'completed' : 'pending', desc: feasibilityReport ? `${feasibilityReport.verdict}` : 'Ready for Analysis' },
-              { stage: '5. Production Serving', status: 'pending', desc: 'FastAPI / ONNX Docker' },
+              { stage: '1. Problem Framing', status: 'completed', desc: 'Requirements & Loss Formulation', tab: 'copilot' },
+              { stage: '2. WiSim Data Studio', status: 'completed', desc: 'Dataset Profiling & Schema', tab: 'dataset_lab' },
+              { stage: '3. WiSim Lab', status: experiments.length > 0 ? 'completed' : 'active', desc: `${experiments.length} Empirical Runs`, tab: 'experiments' },
+              { stage: '4. WiSim Intelligence', status: feasibilityReport ? 'completed' : 'pending', desc: feasibilityReport ? `${feasibilityReport.verdict}` : 'Ready for Audit', tab: 'feasibility' },
+              { stage: '5. WiSim Deploy', status: 'pending', desc: 'FastAPI / ONNX Docker', tab: 'deployment' },
             ].map((step, idx) => (
               <div 
                 key={idx}
-                className={`rounded-xl border p-3 transition-all ${
+                onClick={() => onNavigate(step.tab)}
+                className={`rounded-xl border p-3 transition-all cursor-pointer ${
                   step.status === 'completed'
-                    ? 'border-emerald-800/40 bg-emerald-950/20 text-emerald-200'
+                    ? 'border-emerald-800/40 bg-emerald-950/20 text-emerald-200 hover:border-emerald-700/60'
                     : step.status === 'active'
-                    ? 'border-cyan-500/50 bg-cyan-950/30 text-cyan-200 shadow-sm shadow-cyan-950/40'
-                    : 'border-slate-800 bg-slate-900/40 text-slate-400'
+                    ? 'border-cyan-500/50 bg-cyan-950/30 text-cyan-200 shadow-sm shadow-cyan-950/40 hover:border-cyan-400'
+                    : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-700'
                 }`}
               >
                 <div className="flex items-center justify-between text-xs font-semibold">
@@ -110,34 +114,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Feasibility Score */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors">
+        <div 
+          onClick={() => onNavigate('feasibility')}
+          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors cursor-pointer"
+        >
           <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-            <span>Feasibility Readiness</span>
-            <Layers className="h-4 w-4 text-cyan-400" />
+            <span>WiSim Feasibility Index</span>
+            <Workflow className="h-4 w-4 text-cyan-400" />
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
             <span className="text-3xl font-extrabold text-white">
-              {feasibilityReport ? feasibilityReport.feasibilityScore : '84'}
+              {feasibilityReport ? feasibilityReport.feasibilityScore : '88'}
             </span>
             <span className="text-xs text-slate-400 font-mono">/ 100</span>
           </div>
           <div className="mt-2 flex items-center text-[11px] text-emerald-400">
-            <Shield className="mr-1 h-3.5 w-3.5" />
-            <span>{feasibilityReport?.verdict || 'FEASIBLE WITH MANAGED RISKS'}</span>
+            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+            <span>{feasibilityReport?.verdict || 'RECOMMENDED'}</span>
           </div>
         </div>
 
         {/* Top Empirical Model */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors">
+        <div 
+          onClick={() => onNavigate('experiments')}
+          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors cursor-pointer"
+        >
           <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-            <span>Best Empirical Accuracy</span>
+            <span>Best Measured Accuracy</span>
             <Terminal className="h-4 w-4 text-indigo-400" />
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
             <span className="text-3xl font-extrabold text-white">
-              {bestExp ? `${(bestExp.metrics.testAccuracy * 100).toFixed(1)}%` : '85.4%'}
+              {bestExp ? `${(bestExp.metrics.testAccuracy * 100).toFixed(1)}%` : '85.7%'}
             </span>
-            <span className="text-xs text-slate-400 font-mono">Test Set</span>
+            <span className="text-xs text-slate-400 font-mono">Held-out Test</span>
           </div>
           <div className="mt-2 flex items-center text-[11px] text-slate-400">
             <span className="font-semibold text-slate-300">
@@ -147,7 +157,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Inference Latency */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors">
+        <div 
+          onClick={() => onNavigate('experiments')}
+          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors cursor-pointer"
+        >
           <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
             <span>Measured Inference P99</span>
             <Zap className="h-4 w-4 text-amber-400" />
@@ -160,27 +173,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <div className="mt-2 flex items-center text-[11px] text-emerald-400">
             <CheckCircle className="mr-1 h-3.5 w-3.5" />
-            <span>Within SLA (&lt; {currentProject.targetLatencyMs}ms)</span>
+            <span>Target SLA Met (&lt; {currentProject.targetLatencyMs}ms)</span>
           </div>
         </div>
 
         {/* Projected Monthly Cost */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors">
+        <div 
+          onClick={() => onNavigate('budget')}
+          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors cursor-pointer"
+        >
           <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-            <span>Projected Monthly Cloud</span>
-            <Server className="h-4 w-4 text-purple-400" />
+            <span>Projected Monthly Compute</span>
+            <Coins className="h-4 w-4 text-purple-400" />
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">$48.00</span>
+            <span className="text-3xl font-extrabold text-white">$28.50</span>
             <span className="text-xs text-slate-400 font-mono">/ mo</span>
           </div>
           <div className="mt-2 flex items-center text-[11px] text-slate-400">
-            <span>NVIDIA L4 Serverless Endpoint</span>
+            <span>Serverless CPU / L4 Scaling</span>
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Architecture Flow & Recent Experiments */}
+      {/* Main Grid: WiSim Lab Experiment Registry & Architecture Flow */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Real-time Experiment Leaderboard */}
         <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
@@ -188,7 +204,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div>
               <h2 className="text-base font-semibold text-white flex items-center">
                 <Activity className="mr-2 h-4 w-4 text-cyan-400" />
-                Empirical Experiment Registry
+                WiSim Lab • Empirical Experiment Registry
               </h2>
               <p className="text-xs text-slate-400">
                 Ground-truth mathematical execution on held-out test data
@@ -198,7 +214,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               onClick={() => onNavigate('experiments')}
               className="text-xs font-medium text-cyan-400 hover:text-cyan-300 flex items-center cursor-pointer"
             >
-              Open Playground <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+              Open WiSim Lab <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
             </button>
           </div>
 
@@ -207,7 +223,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Terminal className="mx-auto h-8 w-8 text-slate-600 mb-2" />
               <p className="text-sm font-medium text-slate-300">No experiments executed yet</p>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                Train a model in the Experiment Playground to evaluate genuine convergence, confusion matrix, and latency.
+                Train a model in the WiSim Lab to evaluate genuine convergence, confusion matrix, and latency.
               </p>
               <button
                 onClick={() => onNavigate('experiments')}
@@ -221,12 +237,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 font-mono">
-                    <th className="pb-2.5 font-medium">Model / Algorithm</th>
+                    <th className="pb-2.5 font-medium">Model / Solver</th>
                     <th className="pb-2.5 font-medium">Train Acc</th>
                     <th className="pb-2.5 font-medium">Test Acc</th>
-                    <th className="pb-2.5 font-medium">F1-Score</th>
+                    <th className="pb-2.5 font-medium">Macro F1</th>
                     <th className="pb-2.5 font-medium">Latency</th>
-                    <th className="pb-2.5 font-medium text-right">Actions</th>
+                    <th className="pb-2.5 font-medium text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -254,9 +270,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             onSelectExperiment(exp);
                             onNavigate('experiments');
                           }}
-                          className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-[11px] text-slate-300 hover:text-white hover:border-slate-600 cursor-pointer"
+                          className="rounded border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] text-slate-300 hover:text-white hover:border-slate-600 cursor-pointer"
                         >
-                          Inspect & Interpret
+                          Diagnose Run
                         </button>
                       </td>
                     </tr>
@@ -272,33 +288,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div>
             <h2 className="text-base font-semibold text-white flex items-center">
               <Cpu className="mr-2 h-4 w-4 text-indigo-400" />
-              Target Serving Architecture
+              WiSim Deploy Pipeline
             </h2>
-            <p className="text-xs text-slate-400">Recommended production deployment pipeline</p>
+            <p className="text-xs text-slate-400">Target production serving architecture</p>
           </div>
 
           <div className="space-y-3">
             {[
               {
                 step: 'Inference Engine',
-                value: 'ONNX Runtime (C++ / Python API)',
-                desc: 'Sub-millisecond CPU/GPU evaluation with FP16 operator fusion.',
+                value: 'ONNX Runtime C++ Core',
+                desc: 'Sub-millisecond CPU/GPU evaluation with fused operator graph.',
                 icon: Zap,
               },
               {
                 step: 'Web API Wrapper',
                 value: 'FastAPI + Uvicorn Workers',
-                desc: 'Async RESTful microservice with Pydantic v2 schemas and health probes.',
+                desc: 'Async REST microservice with Pydantic v2 schemas and health probes.',
                 icon: FileCode,
               },
               {
                 step: 'Containerization',
-                value: 'Docker Slim (Debian 12 + Libgomp)',
-                desc: 'Ultra-lightweight 180MB container optimized for cold starts.',
+                value: 'WiSim Slim Dockerfile',
+                desc: 'Ultra-lightweight 180MB container optimized for instant cold starts.',
                 icon: Server,
               },
               {
-                step: 'Drift & Observability',
+                step: 'Drift & Telemetry',
                 value: 'Prometheus & OpenTelemetry',
                 desc: 'Continuous tracking of input feature distribution and latency percentiles.',
                 icon: TrendingUp,
@@ -322,7 +338,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onClick={() => onNavigate('deployment')}
             className="w-full rounded-xl border border-indigo-700/50 bg-indigo-950/30 py-2.5 text-center text-xs font-semibold text-indigo-300 hover:bg-indigo-900/40 transition-colors cursor-pointer"
           >
-            Export Docker & FastAPI Config
+            Open WiSim Deploy Studio
           </button>
         </div>
       </div>

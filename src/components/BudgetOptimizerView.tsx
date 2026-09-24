@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { 
-  DollarSign, 
+  Coins, 
   Cpu, 
   Server, 
   Zap, 
-  Sparkles, 
   TrendingDown, 
   Layers, 
   ShieldCheck, 
   Check, 
   HelpCircle,
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
 import { ProjectContext } from '../types';
 
@@ -75,18 +75,16 @@ const GPU_CATALOG: GpuSpec[] = [
 export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ currentProject }) => {
   const [selectedGpu, setSelectedGpu] = useState<GpuSpec>(GPU_CATALOG[0]);
   const [useSpot, setUseSpot] = useState(true);
-  const [trainingHours, setTrainingHours] = useState(8);
-  const [monthlyQps, setMonthlyQps] = useState(15); // queries per second
+  const [trainingHours, setTrainingHours] = useState(6);
+  const [monthlyQps, setMonthlyQps] = useState(20);
   const [instanceCount, setInstanceCount] = useState(1);
 
   const effectiveHourly = useSpot ? selectedGpu.spotHourly : selectedGpu.gcpHourly;
   const trainingCost = effectiveHourly * trainingHours * instanceCount;
 
-  // Monthly inference estimate
-  // For lightweight models, a single L4 or T4 can serve 150 QPS.
   const servingInstancesNeeded = Math.max(1, Math.ceil(monthlyQps / 120));
   const monthlyServingHours = 730;
-  const inferenceCost = selectedGpu.gcpHourly * servingInstancesNeeded * monthlyServingHours * 0.4; // 40% active duty cycle
+  const inferenceCost = selectedGpu.gcpHourly * servingInstancesNeeded * monthlyServingHours * 0.4;
   const totalCost = trainingCost + inferenceCost;
 
   return (
@@ -95,16 +93,16 @@ export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ curren
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-5 shadow-xl">
         <div>
           <div className="flex items-center space-x-2">
-            <DollarSign className="h-5 w-5 text-cyan-400" />
-            <h2 className="text-lg font-bold text-white">Cloud GPU & Budget Optimization Engine</h2>
+            <Coins className="h-5 w-5 text-cyan-400" />
+            <h2 className="text-lg font-bold text-white">WiSim Training Studio • Compute Simulator</h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Real-time compute cost projection comparing AWS, GCP, and Spot pricing for &ldquo;{currentProject.name}&rdquo;.
+            Simulate training resource requirements, compare Spot vs On-Demand compute, and project monthly serving costs.
           </p>
         </div>
 
         <div className="flex items-center space-x-2 rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-2 text-xs">
-          <span className="text-slate-400">Monthly Budget Target:</span>
+          <span className="text-slate-400">Monthly Project Target:</span>
           <span className="font-mono font-bold text-emerald-400">
             ${currentProject.budgetMonthlyUsd}.00
           </span>
@@ -119,7 +117,7 @@ export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ curren
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
             <h3 className="text-sm font-bold text-white flex items-center">
               <Cpu className="mr-2 h-4 w-4 text-cyan-400" />
-              Select Target Compute Architecture
+              Target Compute Architecture & Accelerators
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -159,7 +157,7 @@ export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ curren
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
             <h3 className="text-sm font-bold text-white flex items-center">
               <Layers className="mr-2 h-4 w-4 text-indigo-400" />
-              Workload Parameters
+              Workload & Traffic Simulation
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -177,13 +175,13 @@ export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ curren
                   onChange={(e) => setTrainingHours(Number(e.target.value))}
                   className="w-full accent-cyan-400 cursor-pointer"
                 />
-                <span className="text-[10px] text-slate-500">Estimated for model convergence</span>
+                <span className="text-[10px] text-slate-500">Convergence sweep time estimate</span>
               </div>
 
               {/* Traffic QPS */}
               <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-2">
                 <div className="flex justify-between text-xs text-slate-300">
-                  <span>Serving Traffic</span>
+                  <span>Serving Load</span>
                   <span className="font-mono text-cyan-400 font-bold">{monthlyQps} Queries/Sec</span>
                 </div>
                 <input
@@ -194,7 +192,7 @@ export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ curren
                   onChange={(e) => setMonthlyQps(Number(e.target.value))}
                   className="w-full accent-cyan-400 cursor-pointer"
                 />
-                <span className="text-[10px] text-slate-500">Peak API request load</span>
+                <span className="text-[10px] text-slate-500">Peak expected traffic rate</span>
               </div>
             </div>
 
@@ -222,9 +220,8 @@ export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ curren
           </div>
         </div>
 
-        {/* Right 1 Col: Cost Summary & Groq Optimization Advice */}
+        {/* Right 1 Col: Cost Summary & WiSim Optimization Advice */}
         <div className="space-y-6">
-          {/* Executive Invoice Card */}
           <div className="rounded-2xl border border-cyan-800/40 bg-gradient-to-b from-cyan-950/40 to-slate-900 p-5 space-y-4">
             <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
               Projected Monthly Compute
@@ -256,20 +253,19 @@ export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ curren
               <div className="flex items-center text-emerald-400 font-semibold mb-1">
                 <Check className="h-3.5 w-3.5 mr-1" />
                 <span>
-                  {totalCost <= currentProject.budgetMonthlyUsd ? 'Within Monthly Budget' : 'Exceeds Target Budget'}
+                  {totalCost <= currentProject.budgetMonthlyUsd ? 'Within Monthly Budget' : 'Exceeds Budget Constraint'}
                 </span>
               </div>
               <p className="text-slate-400">
-                Using {useSpot ? 'Spot pricing' : 'On-demand pricing'} on Google Cloud Platform / AWS us-east-1.
+                Simulation based on {useSpot ? 'Cloud Spot pricing' : 'On-demand pricing'} in US/EU cloud regions.
               </p>
             </div>
           </div>
 
-          {/* Groq Budget Optimization Recommendations */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center">
               <Sparkles className="mr-1.5 h-3.5 w-3.5 text-cyan-400" />
-              WiSim AI Optimization Strategies
+              WiSim Training Studio Recommendations
             </h3>
 
             <div className="space-y-2.5 text-xs text-slate-300">
@@ -290,7 +286,7 @@ export const BudgetOptimizerView: React.FC<BudgetOptimizerViewProps> = ({ curren
               <div className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
                 <strong className="text-cyan-300">Scale-to-Zero Serverless:</strong>
                 <p className="mt-0.5 text-slate-400 text-[11px]">
-                  Deploy to Google Cloud Run or AWS ECS with scale-to-zero when no queries are active to avoid idle baseline costs.
+                  Deploy to Google Cloud Run or AWS ECS with scale-to-zero when no queries are active to eliminate idle costs.
                 </p>
               </div>
             </div>

@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { 
   Rocket, 
-  FileCode, 
   Copy, 
   Check, 
   Download, 
-  Server, 
   ShieldCheck, 
   Zap, 
   Cpu, 
-  Terminal,
-  Activity,
-  Layers
+  Server,
+  FileCode
 } from 'lucide-react';
 import { ProjectContext, ExperimentRun } from '../types';
 
@@ -31,8 +28,8 @@ export const DeploymentStudioView: React.FC<DeploymentStudioViewProps> = ({
 
   const filesContent = {
     fastapi: `# =======================================================
-# WiSim AI - Production Serving Microservice
-# Model: ${modelName} | Target SLA: <${currentProject.targetLatencyMs}ms
+# WiSim Deploy - Production Serving Microservice
+# Model: ${modelName} | Target Latency SLA: <${currentProject.targetLatencyMs}ms
 # =======================================================
 
 from fastapi import FastAPI, HTTPException, status
@@ -42,15 +39,14 @@ import time
 import logging
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("wisim-serving")
+logger = logging.getLogger("wisim-deploy")
 
 app = FastAPI(
-    title="WiSim AI Inference API",
-    description="Low-latency production serving endpoint for ${currentProject.name}",
+    title="WiSim AI Inference Endpoint",
+    description="Production serving API for ${currentProject.name}",
     version="1.0.0"
 )
 
-# Input contract with strict validation
 class PredictionRequest(BaseModel):
     features: list[float] = Field(..., example=[650.0, 42.0, 5.0, 75000.0, 2.0, 1.0, 95000.0, 0.0])
 
@@ -60,31 +56,24 @@ class PredictionResponse(BaseModel):
     latency_ms: float
     model_version: str
 
-# Model Mock / ONNX Session loader
 @app.on_event("startup")
 async def load_model():
     logger.info("Initializing ONNX Runtime inference session...")
     # import onnxruntime as ort
     # app.state.session = ort.InferenceSession("model.onnx")
-    logger.info("Model weights loaded into memory successfully.")
+    logger.info("WiSim serialized model loaded into memory successfully.")
 
 @app.get("/healthz", status_code=status.HTTP_200_OK)
 async def health_check():
-    return {"status": "healthy", "service": "wisim-ai", "project": "${currentProject.name}"}
+    return {"status": "healthy", "platform": "WiSim AI", "project": "${currentProject.name}"}
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(req: PredictionRequest):
     t_start = time.perf_counter()
     
-    # Feature shape validation
     if len(req.features) < 4:
         raise HTTPException(status_code=400, detail="Invalid feature vector dimensions")
 
-    # In production:
-    # inputs = {app.state.session.get_inputs()[0].name: np.array([req.features], dtype=np.float32)}
-    # raw_prob = app.state.session.run(None, inputs)[0][0]
-
-    # Deterministic computation
     prob = float(1.0 / (1.0 + np.exp(-0.02 * (req.features[0] - 500))))
     prediction = 1 if prob >= 0.5 else 0
     latency_ms = (time.perf_counter() - t_start) * 1000
@@ -96,7 +85,7 @@ async def predict(req: PredictionRequest):
         model_version="v1.0-onnx"
     )
 `,
-    docker: `# Multi-stage lightweight production Dockerfile
+    docker: `# WiSim Deploy - Production Multi-stage Containerfile
 FROM python:3.11-slim as builder
 
 WORKDIR /app
@@ -108,7 +97,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \\
 COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Final runtime image
+# Final minimal runtime image
 FROM python:3.11-slim as runtime
 
 WORKDIR /app
@@ -251,10 +240,10 @@ instance_group [
         <div>
           <div className="flex items-center space-x-2">
             <Rocket className="h-5 w-5 text-cyan-400" />
-            <h2 className="text-lg font-bold text-white">Production Deployment Studio</h2>
+            <h2 className="text-lg font-bold text-white">WiSim Deploy • Deployment Planner</h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Export containerized microservices, ONNX serving runtimes, and Kubernetes orchestration manifests.
+            Export containerized microservices, ONNX Runtime configurations, and Kubernetes deployment manifests.
           </p>
         </div>
 
@@ -289,7 +278,7 @@ instance_group [
       <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
         <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center">
           <ShieldCheck className="mr-1.5 h-4 w-4 text-emerald-400" />
-          Production Readiness SLA Audit
+          Production SLA & Compliance Audit
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
@@ -298,7 +287,7 @@ instance_group [
             <div>
               <strong className="text-slate-200">Latency Budget: PASS</strong>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Model executes in &lt;1ms (SLA: {currentProject.targetLatencyMs}ms).
+                Model executes in &lt;1ms (Target SLA: {currentProject.targetLatencyMs}ms).
               </p>
             </div>
           </div>
@@ -308,7 +297,7 @@ instance_group [
             <div>
               <strong className="text-slate-200">Schema Validation</strong>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Pydantic v2 rejects malformed payloads before inference.
+                Pydantic v2 rejects malformed vectors before compute.
               </p>
             </div>
           </div>
@@ -318,7 +307,7 @@ instance_group [
             <div>
               <strong className="text-slate-200">Container Footprint</strong>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Slim multi-stage image under 190MB with libgomp.
+                Multi-stage slim image under 190MB with libgomp.
               </p>
             </div>
           </div>

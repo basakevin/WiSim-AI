@@ -1,23 +1,20 @@
 import React, { useState } from 'react';
 import { 
-  Layers, 
+  Workflow, 
   Sparkles, 
   ShieldCheck, 
   AlertTriangle, 
   Cpu, 
   Database, 
-  DollarSign, 
+  Coins, 
   Rocket, 
   CheckCircle2, 
   Download, 
-  FileText,
-  Clock,
-  ArrowRight,
-  TrendingUp,
-  RefreshCw
+  RefreshCw,
+  Info
 } from 'lucide-react';
 import { FeasibilityReport, ProjectContext } from '../types';
-import { generateStructuredFeasibility } from '../services/groqService';
+import { generateWiSimFeasibility } from '../services/wisimService';
 
 interface FeasibilityViewProps {
   currentProject: ProjectContext;
@@ -39,7 +36,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
   const handleRunAnalysis = async () => {
     setLoading(true);
     try {
-      const result = await generateStructuredFeasibility({
+      const result = await generateWiSimFeasibility({
         projectName: currentProject.name,
         problemStatement: problemInput,
         taskType: taskType,
@@ -55,7 +52,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
       });
       onUpdateReport(result);
     } catch (err) {
-      console.error('Analysis failed:', err);
+      console.error('WiSim Intelligence analysis failed:', err);
     } finally {
       setLoading(false);
     }
@@ -79,13 +76,13 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800/80 pb-5">
           <div>
             <div className="flex items-center space-x-2">
-              <Layers className="h-5 w-5 text-cyan-400" />
+              <Workflow className="h-5 w-5 text-cyan-400" />
               <h2 className="text-lg font-bold text-white">
-                Structured ML Feasibility Analyzer
+                WiSim Intelligence • Project Feasibility & Risk Engine
               </h2>
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              Evaluates algorithmic viability, sample size requirements, compute costs, and deployment feasibility with Groq Llama 3.3.
+              Evaluates algorithmic viability, sample size thresholds, compute costs, and deployment feasibility.
             </p>
           </div>
 
@@ -107,12 +104,12 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
               {loading ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span>Synthesizing via Groq...</span>
+                  <span>Synthesizing via WiSim Intelligence...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" />
-                  <span>Execute Feasibility Audit</span>
+                  <span>Run Feasibility Audit</span>
                 </>
               )}
             </button>
@@ -123,7 +120,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-5">
           <div className="md:col-span-2 space-y-1.5">
             <label className="text-xs font-medium text-slate-300">
-              Problem Formulation & Business Objective
+              Problem Formulation & Objective
             </label>
             <textarea
               rows={2}
@@ -162,6 +159,11 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
             </div>
           </div>
         </div>
+
+        <div className="mt-3 flex items-center space-x-1.5 text-[11px] text-slate-500">
+          <Info className="h-3 w-3" />
+          <span>Note: Feasibility ratings reflect theoretical projections and domain heuristics prior to empirical experiment measurement.</span>
+        </div>
       </div>
 
       {/* Structured Feasibility Report Output */}
@@ -171,7 +173,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-cyan-800/40 bg-gradient-to-br from-cyan-950/40 to-slate-900 p-5 flex flex-col justify-between">
               <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-                Feasibility Index
+                WiSim Feasibility Index
               </div>
               <div className="my-3 flex items-baseline space-x-2">
                 <span className="text-4xl font-extrabold text-white">
@@ -180,7 +182,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
                 <span className="text-sm text-slate-400 font-mono">/ 100</span>
               </div>
               <div className="text-[11px] text-slate-300">
-                Composite technical confidence rating across dataset, compute, and serving SLA.
+                Composite readiness rating evaluated across data distribution, compute, and serving SLAs.
               </div>
             </div>
 
@@ -203,7 +205,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
                 </span>
                 <span className="text-slate-600">•</span>
                 <span>
-                  Baseline: <strong className="text-slate-200 font-mono">{report.problemFraming.baselineModel}</strong>
+                  Baseline Model: <strong className="text-slate-200 font-mono">{report.problemFraming.baselineModel}</strong>
                 </span>
               </div>
             </div>
@@ -217,7 +219,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
                 Algorithmic Candidates & Technical Trade-offs
               </h3>
               <span className="text-xs text-slate-400 font-mono">
-                {report.recommendedArchitectures.length} Models Evaluated
+                {report.recommendedArchitectures.length} Candidates Evaluated
               </span>
             </div>
 
@@ -288,7 +290,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
                   </div>
                 </div>
                 <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-3">
-                  <span className="text-slate-400">Optimal Sample Target:</span>
+                  <span className="text-slate-400">Optimal Target Volume:</span>
                   <div className="mt-1 text-lg font-bold text-cyan-400 font-mono">
                     {report.datasetRequirements.optimalSampleSize.toLocaleString()} rows
                   </div>
@@ -310,13 +312,13 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
             {/* Compute Cost Projections */}
             <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
               <h3 className="text-sm font-bold text-white flex items-center">
-                <DollarSign className="mr-2 h-4 w-4 text-purple-400" />
-                Hardware Sizing & Cloud Cost Projections
+                <Coins className="mr-2 h-4 w-4 text-purple-400" />
+                Compute Sizing & Cost Estimation
               </h3>
 
               <div className="grid grid-cols-3 gap-3 text-xs">
                 <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-3">
-                  <span className="text-slate-400">Training GPU:</span>
+                  <span className="text-slate-400">Recommended GPU:</span>
                   <div className="mt-1 font-semibold text-white truncate font-mono">
                     {report.costEstimation.trainingGpu}
                   </div>
@@ -350,7 +352,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
             <h3 className="text-sm font-bold text-white flex items-center">
               <AlertTriangle className="mr-2 h-4 w-4 text-amber-400" />
-              Technical Risk Analysis & Engineering Mitigations
+              Technical Risk Matrix & Mitigations
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -383,7 +385,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
             <h3 className="text-sm font-bold text-white flex items-center">
               <Rocket className="mr-2 h-4 w-4 text-cyan-400" />
-              Recommended Production Deployment Roadmap
+              WiSim Deploy Roadmap
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -391,7 +393,7 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
                 <div key={step.step} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-cyan-400 font-mono">
-                      Phase 0{step.step}
+                      Stage 0{step.step}
                     </span>
                     <span className="rounded bg-slate-800/80 px-1.5 py-0.5 text-[10px] font-mono text-slate-300">
                       {step.framework}
@@ -405,19 +407,18 @@ export const FeasibilityView: React.FC<FeasibilityViewProps> = ({
           </div>
         </div>
       ) : (
-        /* Empty State */
         <div className="rounded-2xl border border-dashed border-slate-800 p-12 text-center">
-          <Layers className="mx-auto h-12 w-12 text-slate-600 mb-3" />
-          <h3 className="text-base font-semibold text-white">No Feasibility Report Generated Yet</h3>
+          <Workflow className="mx-auto h-12 w-12 text-slate-600 mb-3" />
+          <h3 className="text-base font-semibold text-white">No Feasibility Audit Executed Yet</h3>
           <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-            Click &ldquo;Execute Feasibility Audit&rdquo; to prompt the Groq Llama 3.3 model for structured algorithmic recommendations, data thresholds, and cost projections.
+            Run the WiSim Intelligence engine to evaluate dataset readiness, compute budget projections, and model candidates.
           </p>
           <button
             onClick={handleRunAnalysis}
             disabled={loading}
             className="mt-5 rounded-xl bg-cyan-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-cyan-500 cursor-pointer"
           >
-            Run Feasibility Audit Now
+            Execute Feasibility Audit Now
           </button>
         </div>
       )}

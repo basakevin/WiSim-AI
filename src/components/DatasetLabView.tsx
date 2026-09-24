@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import { 
   Database, 
   BarChart2, 
-  Sliders, 
   Search, 
-  CheckCircle, 
-  HelpCircle, 
-  Layers, 
   ArrowRight,
-  Filter,
-  RefreshCw,
-  Table
+  Table,
+  SlidersHorizontal,
+  CheckCircle,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Dataset } from '../types';
 import { calculateFeatureStats } from '../utils/datasets';
@@ -58,7 +55,6 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
   const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
   const paginatedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
-  // Target class balance count
   const targetCol = selectedDataset.targetColumn;
   const posCount = selectedDataset.data.filter((r) => Number(r[targetCol]) === 1).length;
   const negCount = selectedDataset.data.length - posCount;
@@ -71,10 +67,10 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <Database className="h-5 w-5 text-cyan-400" />
-            <h2 className="text-lg font-bold text-white">Dataset Lab & Data Profiler</h2>
+            <h2 className="text-lg font-bold text-white">WiSim Data Studio</h2>
           </div>
           <p className="text-xs text-slate-400">
-            Real benchmark datasets with live statistical summaries and feature distributions.
+            Real benchmark datasets with live statistical profiles, feature distributions, and preprocessing controls.
           </p>
         </div>
 
@@ -104,18 +100,18 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Sample Count */}
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-          <span className="text-xs text-slate-400 font-medium">Dataset Rows</span>
+          <span className="text-xs text-slate-400 font-medium">Verified Samples</span>
           <div className="mt-1 text-2xl font-extrabold text-white font-mono">
             {selectedDataset.sampleCount.toLocaleString()}
           </div>
-          <span className="text-[11px] text-slate-500">{selectedDataset.features.length} features</span>
+          <span className="text-[11px] text-slate-500">{selectedDataset.features.length} feature dimensions</span>
         </div>
 
         {/* Target Balance */}
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <span className="text-xs text-slate-400 font-medium">Class Balance ({targetCol})</span>
           <div className="mt-1 text-2xl font-extrabold text-cyan-400 font-mono">
-            {posRatio}% <span className="text-xs font-normal text-slate-400">Positives</span>
+            {posRatio}% <span className="text-xs font-normal text-slate-400">Positive</span>
           </div>
           <span className="text-[11px] text-slate-500">
             {posCount} Pos / {negCount} Neg
@@ -125,7 +121,7 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
         {/* Train/Test Split Slider */}
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Train/Test Split</span>
+            <span>Train/Test Partition</span>
             <span className="font-mono text-cyan-400 font-bold">
               {Math.round((1 - trainRatio) * 100)} / {Math.round(trainRatio * 100)}
             </span>
@@ -150,10 +146,10 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
         {/* Preprocessing Actions */}
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-medium">StandardScaler (Z-Score)</span>
+            <span className="text-xs text-slate-400 font-medium">Z-Score Normalization</span>
             <button
               onClick={onToggleNormalize}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
                 normalize ? 'bg-cyan-500' : 'bg-slate-700'
               }`}
             >
@@ -168,7 +164,7 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
             onClick={onNavigateToExperiments}
             className="mt-2 flex items-center justify-center space-x-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 py-1.5 text-xs font-semibold text-white shadow-md shadow-cyan-500/20 hover:from-cyan-400 hover:to-indigo-500 cursor-pointer"
           >
-            <span>Launch Experiment</span>
+            <span>Load in WiSim Lab</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -180,7 +176,7 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
         <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
           <h3 className="text-sm font-bold text-white flex items-center">
             <Table className="mr-2 h-4 w-4 text-cyan-400" />
-            Feature Profile & Statistical Summary
+            Feature Matrix Profile & Statistical Summary
           </h3>
 
           <div className="overflow-x-auto">
@@ -230,7 +226,7 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
                               : 'text-slate-500'
                           }`}
                         >
-                          {isSelected ? 'Active' : 'View'}
+                          {isSelected ? 'Active' : 'Inspect'}
                         </span>
                       </td>
                     </tr>
@@ -255,7 +251,6 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
 
           {currentStats && currentStats.bins ? (
             <div className="space-y-4">
-              {/* Bar histogram */}
               <div className="space-y-2 pt-2">
                 {currentStats.bins.map((bin, idx) => {
                   const maxCount = Math.max(...(currentStats.bins?.map((b) => b.count) || [1]));
@@ -264,7 +259,7 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
                     <div key={idx} className="space-y-1">
                       <div className="flex justify-between text-[10px] text-slate-400 font-mono">
                         <span>{bin.range}</span>
-                        <span>{bin.count} items ({Math.round((bin.count / selectedDataset.sampleCount) * 100)}%)</span>
+                        <span>{bin.count} ({Math.round((bin.count / selectedDataset.sampleCount) * 100)}%)</span>
                       </div>
                       <div className="h-3 w-full rounded bg-slate-950/80 overflow-hidden">
                         <div
@@ -277,7 +272,6 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
                 })}
               </div>
 
-              {/* Stats detail box */}
               <div className="grid grid-cols-2 gap-2 border-t border-slate-800/80 pt-3 text-[11px] font-mono text-slate-300">
                 <div className="rounded-lg bg-slate-950/60 p-2 border border-slate-800/60">
                   <span className="text-slate-500">Min:</span> {currentStats.min.toFixed(2)}
@@ -303,7 +297,10 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
       <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-white">Raw Data Explorer</h3>
+            <h3 className="text-sm font-bold text-white flex items-center">
+              <FileSpreadsheet className="mr-2 h-4 w-4 text-cyan-400" />
+              Raw Data Explorer
+            </h3>
             <p className="text-xs text-slate-400">
               Showing {filteredData.length} records in {selectedDataset.name}
             </p>
@@ -313,7 +310,7 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
             <input
               type="text"
-              placeholder="Search values..."
+              placeholder="Search records..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
