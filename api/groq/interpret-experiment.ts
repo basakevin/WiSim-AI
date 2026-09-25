@@ -1,16 +1,11 @@
-import { fallbackInterpretation, groqCompletion, hasGroqKey, jsonBody, methodNotAllowed, selectedModel } from './shared';
-
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
-  const body = jsonBody(req);
-  if (!body.metrics) return res.status(400).json({ error: 'Metrics are required to interpret an experiment' });
-  if (!hasGroqKey()) return res.status(200).json(fallbackInterpretation(body.metrics, body.algorithm, body.datasetName));
-  const prompt = `Interpret the following measured ML experiment. Ground the analysis strictly in the provided metrics. Do not invent benchmarks.\n${JSON.stringify({ experimentName: body.experimentName || 'Run #1', datasetName: body.datasetName || 'Dataset', algorithm: body.algorithm || 'ML Model', hyperparameters: body.hyperparameters || {}, metrics: body.metrics })}`;
-  try {
-    const completion = await groqCompletion({ model: selectedModel(), messages: [{ role: 'system', content: 'You are WiSim AI, a rigorous ML research scientist. Distinguish measured metrics from estimates.' }, { role: 'user', content: prompt }], temperature: 0.2 });
-    return res.status(200).json({ analysis: completion.choices?.[0]?.message?.content || 'Unable to generate interpretation.', source: 'ai-analysis' });
-  } catch (error) {
-    console.error('AI experiment interpretation error', error);
-    return res.status(200).json(fallbackInterpretation(body.metrics, body.algorithm, body.datasetName));
-  }
+  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Method not allowed' }); }
+  const body = typeof req.body === 'object' ? req.body : (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })();
+  const metrics = body.metrics;
+  if (!metrics) return res.status(400).json({ error: 'Metrics are required to interpret an experiment' });
+  const train = Number(metrics.trainAccuracy || 0); const test = Number(metrics.testAccuracy || 0); const gap = (train - test) * 100; const diagnosis = gap > 8 ? `Overfitting detected (${gap.toFixed(1)}% generalization gap)` : train < 0.65 ? 'Underfitting detected' : 'Balanced generalization';
+  const fallback = { analysis: `### WiSim AI Empirical Experiment Assessment\n*Grounded strictly in measured run data for ${body.algorithm || 'ML model'} on ${body.datasetName || 'dataset'}.*\n\n#### Generalization\n- **Status:** ${diagnosis}\n- Training accuracy: **${(train * 100).toFixed(1)}%**\n- Held-out test accuracy: **${(test * 100).toFixed(1)}%**\n\n#### Measured metrics\n- F1: **${(Number(metrics.f1Score || 0) * 100).toFixed(1)}%**\n- Precision: **${(Number(metrics.precision || 0) * 100).toFixed(1)}%**\n- Recall: **${(Number(metrics.recall || 0) * 100).toFixed(1)}%**\n- Inference latency: **${Number(metrics.inferenceLatencyMs || 0)} ms/sample**\n\n#### Next steps\n1. Compare this immutable run against another baseline.\n2. Inspect false-positive and false-negative costs.\n3. Validate latency and drift on representative production traffic.`, source: 'offline-grounded-evaluator' };
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey || apiKey.length < 10 || apiKey === 'gsk_your_groq_api_key_here') return res.status(200).json(fallback);
+  try { const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', messages: [{ role: 'system', content: 'You are WiSim AI, a rigorous ML research scientist. Ground every claim in measured metrics.' }, { role: 'user', content: JSON.stringify(body) }], temperature: 0.2 }) }); if (!upstream.ok) return res.status(200).json(fallback); const data = await upstream.json(); return res.status(200).json({ analysis: data.choices?.[0]?.message?.content || fallback.analysis, source: 'ai-analysis' }); } catch { return res.status(200).json(fallback); }
 }
