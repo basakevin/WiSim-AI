@@ -1,4 +1,4 @@
-import { endSse, groqStream, hasGroqKey, jsonBody, methodNotAllowed, selectedModel, sseHeaders, writeSse } from './_shared';
+import { endSse, groqStream, hasGroqKey, jsonBody, methodNotAllowed, selectedModel, sseHeaders, writeSse } from './shared';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);

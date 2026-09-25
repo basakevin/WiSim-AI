@@ -1,4 +1,4 @@
-import { fallbackAnalysis, groqCompletion, hasGroqKey, jsonBody, methodNotAllowed, selectedModel } from './_shared';
+import { fallbackAnalysis, groqCompletion, hasGroqKey, jsonBody, methodNotAllowed, selectedModel } from './shared';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
