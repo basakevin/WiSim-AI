@@ -1,22 +1,5 @@
-import React from 'react';
-import { 
-  Terminal, 
-  Workflow, 
-  CheckCircle, 
-  Clock, 
-  ArrowUpRight, 
-  Zap, 
-  ShieldCheck, 
-  Server, 
-  Cpu, 
-  TrendingUp, 
-  FileCode,
-  Activity,
-  Bot,
-  Database,
-  Coins,
-  Rocket
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, Bot, Check, ChevronDown, Database, FlaskConical, Lightbulb, Rocket, Sparkles, Target, Upload } from 'lucide-react';
 import { ProjectContext, ExperimentRun, FeasibilityReport } from '../types';
 
 interface DashboardViewProps {
@@ -25,323 +8,57 @@ interface DashboardViewProps {
   feasibilityReport: FeasibilityReport | null;
   onNavigate: (tab: string) => void;
   onSelectExperiment: (exp: ExperimentRun) => void;
+  isFirstRun?: boolean;
+  onStartIdea?: (idea: string, useSample?: boolean) => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({
-  currentProject,
-  experiments,
-  feasibilityReport,
-  onNavigate,
-  onSelectExperiment,
-}) => {
-  const bestExp = experiments.length > 0 
-    ? [...experiments].sort((a, b) => b.metrics.testAccuracy - a.metrics.testAccuracy)[0]
-    : null;
+const stages = [
+  { id: 'idea', label: 'Idea', tab: 'dashboard', icon: Lightbulb },
+  { id: 'plan', label: 'Plan', tab: 'feasibility', icon: Target },
+  { id: 'data', label: 'Data', tab: 'dataset_lab', icon: Database },
+  { id: 'experiment', label: 'Experiment', tab: 'experiments', icon: FlaskConical },
+  { id: 'evaluate', label: 'Evaluate', tab: 'feasibility', icon: Sparkles },
+  { id: 'deploy', label: 'Deploy', tab: 'deployment', icon: Rocket },
+];
 
-  return (
-    <div className="space-y-6">
-      {/* Hero Project Brief Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 p-6 shadow-xl">
-        <div className="absolute right-0 top-0 -mt-12 -mr-12 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="flex items-center space-x-2">
-              <span className="inline-flex items-center rounded-md bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-400 border border-cyan-500/20">
-                <Workflow className="mr-1.5 h-3.5 w-3.5" /> WiSim Intelligence
-              </span>
-              <span className="text-xs text-slate-400">Research Pipeline Active</span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-              {currentProject.name}
-            </h1>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              {currentProject.description}
-            </p>
-          </div>
+const examples = [
+  'Detect crop diseases from smartphone photos',
+  'Predict which customers may cancel next month',
+  'Forecast energy demand for a small community',
+];
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => onNavigate('copilot')}
-              className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-cyan-500/25 hover:from-cyan-400 hover:to-indigo-500 transition-all cursor-pointer"
-            >
-              <Bot className="h-4 w-4" />
-              <span>Launch WiSim Copilot</span>
-            </button>
-            <button
-              onClick={() => onNavigate('experiments')}
-              className="flex items-center space-x-2 rounded-xl border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
-            >
-              <Terminal className="h-4 w-4 text-cyan-400" />
-              <span>WiSim Lab Experiments</span>
-            </button>
-          </div>
+export const DashboardView: React.FC<DashboardViewProps> = ({ currentProject, experiments, feasibilityReport, onNavigate, onSelectExperiment, isFirstRun = false, onStartIdea }) => {
+  const [idea, setIdea] = useState('');
+  const bestExp = [...experiments].sort((a, b) => b.metrics.testAccuracy - a.metrics.testAccuracy)[0];
+  const started = !isFirstRun;
+  const currentStage = started ? (experiments.length ? (feasibilityReport ? 'evaluate' : 'experiment') : 'data') : 'idea';
+  const start = (useSample = false) => {
+    const text = useSample ? 'Detect crop diseases from smartphone photos' : idea.trim();
+    if (text && onStartIdea) onStartIdea(text, useSample);
+  };
+
+  if (isFirstRun) {
+    return <div className="mx-auto flex min-h-[calc(100vh-150px)] max-w-3xl items-center justify-center py-10">
+      <div className="w-full text-center">
+        <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300 shadow-[0_0_45px_rgba(34,211,238,0.12)]"><Sparkles className="h-6 w-6" /></div>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">Your AI project starts here</p>
+        <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">What AI idea would you like to explore?</h1>
+        <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-400">Describe your idea. We'll help you turn it into a practical AI project.</p>
+        <div className="mx-auto mt-9 max-w-2xl rounded-2xl border border-slate-700 bg-slate-900/80 p-3 shadow-2xl shadow-slate-950/40 focus-within:border-cyan-500/60 focus-within:ring-4 focus-within:ring-cyan-500/10">
+          <textarea value={idea} onChange={(event) => setIdea(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') start(); }} rows={3} className="w-full resize-none bg-transparent px-3 py-2 text-left text-base text-slate-100 outline-none placeholder:text-slate-600" placeholder="I want to build an AI system that detects crop diseases from smartphone photos..." aria-label="Describe your AI idea" />
+          <div className="flex items-center justify-between gap-3 border-t border-slate-800 px-2 pt-3"><span className="hidden text-xs text-slate-600 sm:inline">Press Ctrl + Enter to continue</span><button type="button" disabled={!idea.trim()} onClick={() => start()} className="ml-auto inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-40">Explore my idea <ArrowRight className="h-4 w-4" /></button></div>
         </div>
-
-        {/* Modular Pipeline Stages */}
-        <div className="mt-8 border-t border-slate-800/80 pt-6">
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {[
-              { stage: '1. Problem Framing', status: 'completed', desc: 'Requirements & Loss Formulation', tab: 'copilot' },
-              { stage: '2. WiSim Data Studio', status: 'completed', desc: 'Dataset Profiling & Schema', tab: 'dataset_lab' },
-              { stage: '3. WiSim Lab', status: experiments.length > 0 ? 'completed' : 'active', desc: `${experiments.length} Empirical Runs`, tab: 'experiments' },
-              { stage: '4. WiSim Intelligence', status: feasibilityReport ? 'completed' : 'pending', desc: feasibilityReport ? `${feasibilityReport.verdict}` : 'Ready for Audit', tab: 'feasibility' },
-              { stage: '5. WiSim Deploy', status: 'pending', desc: 'FastAPI / ONNX Docker', tab: 'deployment' },
-            ].map((step, idx) => (
-              <div 
-                key={idx}
-                onClick={() => onNavigate(step.tab)}
-                className={`rounded-xl border p-3 transition-all cursor-pointer ${
-                  step.status === 'completed'
-                    ? 'border-emerald-800/40 bg-emerald-950/20 text-emerald-200 hover:border-emerald-700/60'
-                    : step.status === 'active'
-                    ? 'border-cyan-500/50 bg-cyan-950/30 text-cyan-200 shadow-sm shadow-cyan-950/40 hover:border-cyan-400'
-                    : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span>{step.stage}</span>
-                  {step.status === 'completed' && <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />}
-                  {step.status === 'active' && <Zap className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />}
-                  {step.status === 'pending' && <Clock className="h-3.5 w-3.5 text-slate-500" />}
-                </div>
-                <p className="mt-1 text-[11px] text-slate-400 line-clamp-1">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <div className="mt-8 flex flex-wrap justify-center gap-2">{examples.map((example) => <button key={example} type="button" onClick={() => setIdea(example)} className="rounded-full border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400 transition hover:border-slate-600 hover:text-slate-200">{example}</button>)}</div>
+        <button type="button" onClick={() => start(true)} className="mt-8 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-cyan-300"><Upload className="h-4 w-4" /> Open the sample project: AI Crop Disease Detection</button>
       </div>
+    </div>;
+  }
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Feasibility Score */}
-        <div 
-          onClick={() => onNavigate('feasibility')}
-          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors cursor-pointer"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-            <span>WiSim Feasibility Index</span>
-            <Workflow className="h-4 w-4 text-cyan-400" />
-          </div>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">
-              {feasibilityReport ? feasibilityReport.feasibilityScore : '88'}
-            </span>
-            <span className="text-xs text-slate-400 font-mono">/ 100</span>
-          </div>
-          <div className="mt-2 flex items-center text-[11px] text-emerald-400">
-            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-            <span>{feasibilityReport?.verdict || 'RECOMMENDED'}</span>
-          </div>
-        </div>
-
-        {/* Top Empirical Model */}
-        <div 
-          onClick={() => onNavigate('experiments')}
-          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors cursor-pointer"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-            <span>Best Measured Accuracy</span>
-            <Terminal className="h-4 w-4 text-indigo-400" />
-          </div>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">
-              {bestExp ? `${(bestExp.metrics.testAccuracy * 100).toFixed(1)}%` : '85.7%'}
-            </span>
-            <span className="text-xs text-slate-400 font-mono">Held-out Test</span>
-          </div>
-          <div className="mt-2 flex items-center text-[11px] text-slate-400">
-            <span className="font-semibold text-slate-300">
-              {bestExp ? bestExp.algorithm.replace(/_/g, ' ') : 'Random Forest Classifier'}
-            </span>
-          </div>
-        </div>
-
-        {/* Inference Latency */}
-        <div 
-          onClick={() => onNavigate('experiments')}
-          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors cursor-pointer"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-            <span>Measured Inference P99</span>
-            <Zap className="h-4 w-4 text-amber-400" />
-          </div>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">
-              {bestExp ? `${bestExp.metrics.inferenceLatencyMs}` : '0.12'}
-            </span>
-            <span className="text-xs text-slate-400 font-mono">ms / sample</span>
-          </div>
-          <div className="mt-2 flex items-center text-[11px] text-emerald-400">
-            <CheckCircle className="mr-1 h-3.5 w-3.5" />
-            <span>Target SLA Met (&lt; {currentProject.targetLatencyMs}ms)</span>
-          </div>
-        </div>
-
-        {/* Projected Monthly Cost */}
-        <div 
-          onClick={() => onNavigate('budget')}
-          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-slate-700 transition-colors cursor-pointer"
-        >
-          <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-            <span>Projected Monthly Compute</span>
-            <Coins className="h-4 w-4 text-purple-400" />
-          </div>
-          <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-white">$28.50</span>
-            <span className="text-xs text-slate-400 font-mono">/ mo</span>
-          </div>
-          <div className="mt-2 flex items-center text-[11px] text-slate-400">
-            <span>Serverless CPU / L4 Scaling</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Grid: WiSim Lab Experiment Registry & Architecture Flow */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Real-time Experiment Leaderboard */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-white flex items-center">
-                <Activity className="mr-2 h-4 w-4 text-cyan-400" />
-                WiSim Lab • Empirical Experiment Registry
-              </h2>
-              <p className="text-xs text-slate-400">
-                Ground-truth mathematical execution on held-out test data
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigate('experiments')}
-              className="text-xs font-medium text-cyan-400 hover:text-cyan-300 flex items-center cursor-pointer"
-            >
-              Open WiSim Lab <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {experiments.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-800 p-8 text-center">
-              <Terminal className="mx-auto h-8 w-8 text-slate-600 mb-2" />
-              <p className="text-sm font-medium text-slate-300">No experiments executed yet</p>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                Train a model in the WiSim Lab to evaluate genuine convergence, confusion matrix, and latency.
-              </p>
-              <button
-                onClick={() => onNavigate('experiments')}
-                className="mt-4 rounded-lg bg-cyan-600 px-4 py-2 text-xs font-semibold text-white hover:bg-cyan-500 cursor-pointer"
-              >
-                Launch First Experiment
-              </button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-mono">
-                    <th className="pb-2.5 font-medium">Model / Solver</th>
-                    <th className="pb-2.5 font-medium">Train Acc</th>
-                    <th className="pb-2.5 font-medium">Test Acc</th>
-                    <th className="pb-2.5 font-medium">Macro F1</th>
-                    <th className="pb-2.5 font-medium">Latency</th>
-                    <th className="pb-2.5 font-medium text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {experiments.map((exp) => (
-                    <tr key={exp.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3">
-                        <div className="font-semibold text-slate-200">{exp.name}</div>
-                        <div className="text-[10px] text-slate-500">{exp.datasetName}</div>
-                      </td>
-                      <td className="py-3 font-mono text-slate-300">
-                        {(exp.metrics.trainAccuracy * 100).toFixed(1)}%
-                      </td>
-                      <td className="py-3 font-mono font-bold text-cyan-400">
-                        {(exp.metrics.testAccuracy * 100).toFixed(1)}%
-                      </td>
-                      <td className="py-3 font-mono text-emerald-400">
-                        {(exp.metrics.f1Score * 100).toFixed(1)}%
-                      </td>
-                      <td className="py-3 font-mono text-slate-400">
-                        {exp.metrics.inferenceLatencyMs} ms
-                      </td>
-                      <td className="py-3 text-right">
-                        <button
-                          onClick={() => {
-                            onSelectExperiment(exp);
-                            onNavigate('experiments');
-                          }}
-                          className="rounded border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] text-slate-300 hover:text-white hover:border-slate-600 cursor-pointer"
-                        >
-                          Diagnose Run
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Right 1 Col: Production Architecture Stack */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-4">
-          <div>
-            <h2 className="text-base font-semibold text-white flex items-center">
-              <Cpu className="mr-2 h-4 w-4 text-indigo-400" />
-              WiSim Deploy Pipeline
-            </h2>
-            <p className="text-xs text-slate-400">Target production serving architecture</p>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              {
-                step: 'Inference Engine',
-                value: 'ONNX Runtime C++ Core',
-                desc: 'Sub-millisecond CPU/GPU evaluation with fused operator graph.',
-                icon: Zap,
-              },
-              {
-                step: 'Web API Wrapper',
-                value: 'FastAPI + Uvicorn Workers',
-                desc: 'Async REST microservice with Pydantic v2 schemas and health probes.',
-                icon: FileCode,
-              },
-              {
-                step: 'Containerization',
-                value: 'WiSim Slim Dockerfile',
-                desc: 'Ultra-lightweight 180MB container optimized for instant cold starts.',
-                icon: Server,
-              },
-              {
-                step: 'Drift & Telemetry',
-                value: 'Prometheus & OpenTelemetry',
-                desc: 'Continuous tracking of input feature distribution and latency percentiles.',
-                icon: TrendingUp,
-              },
-            ].map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <div key={idx} className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-3">
-                  <div className="flex items-center space-x-2">
-                    <Icon className="h-4 w-4 text-cyan-400" />
-                    <span className="text-[11px] font-medium text-slate-400">{item.step}</span>
-                  </div>
-                  <div className="mt-1 text-xs font-semibold text-slate-200">{item.value}</div>
-                  <p className="mt-1 text-[11px] text-slate-400 leading-normal">{item.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={() => onNavigate('deployment')}
-            className="w-full rounded-xl border border-indigo-700/50 bg-indigo-950/30 py-2.5 text-center text-xs font-semibold text-indigo-300 hover:bg-indigo-900/40 transition-colors cursor-pointer"
-          >
-            Open WiSim Deploy Studio
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="space-y-8 pb-12">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">Project workspace</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">{currentProject.name}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{currentProject.description}</p></div><button type="button" onClick={() => onNavigate('copilot')} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20"><Bot className="h-4 w-4" /> Refine with WiSim AI</button></div>
+    <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-800 bg-slate-900/50 p-3 sm:grid-cols-6">{stages.map((stage) => { const Icon = stage.icon; const active = stage.id === currentStage; const completed = stages.findIndex((item) => item.id === currentStage) > stages.findIndex((item) => item.id === stage.id); return <button type="button" key={stage.id} onClick={() => onNavigate(stage.tab)} className={`rounded-xl px-2 py-3 text-center transition ${active ? 'bg-cyan-500/10 text-cyan-300 ring-1 ring-cyan-500/40' : completed ? 'text-emerald-300 hover:bg-slate-800' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'}`}><span className="mx-auto flex h-7 w-7 items-center justify-center rounded-full bg-slate-950">{completed ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}</span><span className="mt-2 block text-[11px] font-semibold">{stage.label}</span></button>; })}</div>
+    <section className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]"><div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6"><div className="flex items-center gap-2 text-sm font-semibold text-white"><Target className="h-4 w-4 text-cyan-400" /> Your project blueprint</div><p className="mt-2 text-sm leading-6 text-slate-400">WiSim keeps the technical detail available, but starts with the decisions that matter.</p><div className="mt-6 space-y-4">{[['Problem', currentProject.description], ['Recommended approach', feasibilityReport?.problemFraming.baselineModel || 'Start with a measured baseline after profiling your data.'], ['What we need next', experiments.length ? 'Compare the measured runs and understand their limitations.' : 'Choose a sample dataset or upload data to begin a real experiment.']].map(([label, value]) => <div key={label} className="border-b border-slate-800 pb-4 last:border-0 last:pb-0"><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p><p className="mt-1 text-sm leading-6 text-slate-200">{value}</p></div>)}</div><div className="mt-7 flex flex-wrap gap-3"><button type="button" onClick={() => onNavigate(experiments.length ? 'feasibility' : 'dataset_lab')} className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-300">{experiments.length ? 'Continue to Evaluate' : 'Continue to Data'} <ArrowRight className="h-4 w-4" /></button><button type="button" onClick={() => onNavigate('feasibility')} className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:border-slate-500 hover:text-white">View assumptions</button></div></div>
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-semibold text-white">What happens next</p><p className="mt-1 text-xs text-slate-500">One clear step at a time</p></div><span className="rounded-full bg-amber-400/10 px-2 py-1 text-[10px] font-semibold text-amber-300">{experiments.length ? 'Review results' : 'Needs your input'}</span></div><div className="mt-6 space-y-3">{[['Data', 'Profile or choose a dataset', 'dataset_lab'], ['Experiment', 'Run a supported model with measured results', 'experiments'], ['Deploy', 'Turn the learnings into a practical checklist', 'deployment']].map(([label, text, tab], index) => <button type="button" key={label} onClick={() => onNavigate(tab)} className="flex w-full items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-left transition hover:border-slate-600"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-700 text-xs font-semibold text-slate-400">{index + 1}</span><span className="min-w-0 flex-1"><span className="block text-sm font-medium text-slate-200">{label}</span><span className="block text-xs text-slate-500">{text}</span></span><ArrowRight className="h-4 w-4 text-slate-600" /></button>)}</div></div></section>
+    {bestExp && <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold text-white">Here's what we learned from your experiment</p><p className="mt-1 text-xs text-slate-500">Measured on held-out data, not a projection.</p></div><button type="button" onClick={() => { onSelectExperiment(bestExp); onNavigate('experiments'); }} className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-300 hover:text-cyan-200">Open technical details <ChevronDown className="h-3.5 w-3.5 -rotate-90" /></button></div><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{[['Held-out accuracy', `${(bestExp.metrics.testAccuracy * 100).toFixed(1)}%`], ['F1 score', `${(bestExp.metrics.f1Score * 100).toFixed(1)}%`], ['Inference latency', `${bestExp.metrics.inferenceLatencyMs} ms`], ['Run status', 'Measured']].map(([label, value]) => <div key={label} className="rounded-xl bg-slate-950/60 p-3"><p className="text-[11px] text-slate-500">{label}</p><p className="mt-1 text-lg font-semibold text-slate-100">{value}</p></div>)}</div></section>}
+  </div>;
 };

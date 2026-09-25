@@ -96,6 +96,24 @@ export const DatasetLabView: React.FC<DatasetLabViewProps> = ({
         </div>
       </div>
 
+      <section className="grid gap-3 md:grid-cols-3" aria-label="Dataset starting choices">
+        {[
+          { title: 'Upload my dataset', detail: 'Bring a CSV and we will check its shape, missing values, and labels.', icon: FileSpreadsheet, action: 'Upload is coming next' },
+          { title: 'Use a sample dataset', detail: 'Start immediately with a verified benchmark dataset.', icon: Database, action: 'Use this dataset' },
+          { title: "I don't have data yet", detail: 'Learn what data your idea needs and how to collect it responsibly.', icon: CheckCircle, action: 'See data guidance' },
+        ].map((choice) => {
+          const Icon = choice.icon;
+          return (
+            <button key={choice.title} type="button" onClick={() => choice.title === 'Use a sample dataset' ? onNavigateToExperiments() : undefined} className="group rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-left transition hover:border-cyan-500/50 hover:bg-slate-900">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300"><Icon className="h-4 w-4" /></span>
+              <span className="mt-4 block text-sm font-semibold text-white">{choice.title}</span>
+              <span className="mt-1 block text-xs leading-5 text-slate-500">{choice.detail}</span>
+              <span className="mt-3 block text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">{choice.action} →</span>
+            </button>
+          );
+        })}
+      </section>
+
       {/* Dataset Summary Cards & Preprocessing Controls */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Sample Count */}

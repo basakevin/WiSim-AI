@@ -15,6 +15,13 @@ import { WiSimEngineStatus, fetchWiSimEngineStatus } from './services/wisimServi
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isStatusModalOpen, setIsStatusModalOpen] = useState<boolean>(false);
+  const [hasStarted, setHasStarted] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem('wisim-onboarding-complete') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // Active Project Memory Context
   const [currentProject, setCurrentProject] = useState<ProjectContext>({
@@ -219,6 +226,28 @@ export default function App() {
     setActiveExperiment(newExp);
   };
 
+  const handleStartIdea = (idea: string, useSample = false) => {
+    const name = useSample ? 'AI Crop Disease Detection' : idea.split(/\s+/).slice(0, 7).join(' ');
+    setCurrentProject((previous) => ({
+      ...previous,
+      id: useSample ? 'proj-crop-disease' : `proj-${Date.now()}`,
+      name,
+      description: idea,
+      taskType: useSample ? 'computer-vision' : 'binary-classification',
+      status: 'idea',
+    }));
+    setExperiments([]);
+    setActiveExperiment(null);
+    setFeasibilityReport(null);
+    setHasStarted(true);
+    try {
+      window.localStorage.setItem('wisim-onboarding-complete', 'true');
+    } catch {
+      // Local storage is optional; the workspace remains usable in private mode.
+    }
+    setActiveTab('copilot');
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Header & Subsystem Navigation */}
@@ -232,13 +261,15 @@ export default function App() {
 
       {/* Main Content Workspace */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        {activeTab === 'dashboard' && (
+        {(activeTab === 'dashboard' || activeTab === 'projects') && (
           <DashboardView
             currentProject={currentProject}
             experiments={experiments}
             feasibilityReport={feasibilityReport}
             onNavigate={(tab) => setActiveTab(tab)}
             onSelectExperiment={(exp) => setActiveExperiment(exp)}
+            isFirstRun={!hasStarted}
+            onStartIdea={handleStartIdea}
           />
         )}
 

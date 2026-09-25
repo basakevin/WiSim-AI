@@ -46,6 +46,7 @@ export const ExperimentPlaygroundView: React.FC<ExperimentPlaygroundViewProps> =
   const [hiddenUnits, setHiddenUnits] = useState(16);
   const [treeDepth, setTreeDepth] = useState(4);
   const [kNeighbors, setKNeighbors] = useState(5);
+  const [advancedMode, setAdvancedMode] = useState(false);
   
   const [isTraining, setIsTraining] = useState(false);
   const [interpreting, setInterpreting] = useState(false);
@@ -247,8 +248,18 @@ criterion = nn.BCELoss()
               })}
             </div>
 
+            <div className="border-t border-slate-800/80 pt-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-slate-300">How much control do you want?</p>
+                  <p className="mt-1 text-[11px] text-slate-500">WiSim recommends the defaults for a first run.</p>
+                </div>
+                <button type="button" onClick={() => setAdvancedMode((value) => !value)} className="rounded-lg border border-slate-700 px-2.5 py-1.5 text-[11px] font-semibold text-slate-300 hover:border-cyan-500/50 hover:text-cyan-300">{advancedMode ? 'Beginner mode' : 'Advanced mode'}</button>
+              </div>
+            </div>
+
             {/* Hyperparameter Controls */}
-            <div className="border-t border-slate-800/80 pt-4 space-y-3">
+            {advancedMode && <div className="border-t border-slate-800/80 pt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-300 flex items-center">
                   <Sliders className="mr-1.5 h-3.5 w-3.5 text-cyan-400" />
@@ -370,7 +381,7 @@ criterion = nn.BCELoss()
                   />
                 </div>
               )}
-            </div>
+            </div>}
           </div>
         </div>
 
